@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Speed Card Game</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: #0b1220;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .game-container {
+      width: 900px;
+      max-width: 95vw;
+      padding: 16px;
+      background: radial-gradient(circle at top, #1f2937, #020617);
+      border-radius: 18px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #f97316;
+    }
+
+    .btn {
+      border: none;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: #f97316;
+      color: #111827;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+      background: #fb923c;
+    }
+
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: #9ca3af;
+      padding: 4px 4px 10px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .status-label {
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    .board {
+      display: grid;
+      grid-template-rows: auto auto auto;
+      gap: 12px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .zone-label {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      opacity: 0.75;
+      margin-bottom: 2px;
+    }
+
+    .hand {
+      display: flex;
+      gap: 8px;
+    }
+
+    .card {
+      width: 60px;
+      height: 90px;
+      border-radius: 10px;
+      background: #111827;
+      border: 1px solid rgba(156, 163, 175, 0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 1.1rem;
+      cursor: default;
+      position: relative;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+    }
+
+    .card.small {
+      width: 48px;
+      height: 70px;
+      font-size: 0.9rem;
+    }
+
+    .card.center {
+      width: 80px;
+      height: 110px;
+      background: linear-gradient(145deg, #111827, #020617);
+      border: 2px solid #f97316;
+      font-size: 1.4rem;
+    }
+
+    .card.clickable {
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, border 0.1s ease;
+    }
+
+    .card.clickable:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+      border-color: #f97316;
+    }
+
+    .card-back {
+      background: linear-gradient(135deg, #1f2937, #020617);
+      border: 2px solid #475569;
+    }
+
+    .card-rank {
+      font-size: 1.1em;
+    }
+
+    .card-suit {
+      font-size: 0.85em;
+      opacity: 0.8;
+      margin-top: 2px;
+    }
+
+    .muted {
+      opacity: 0.5;
+    }
+
+    .pile-info {
+      font-size: 0.8rem;
+      margin-top: 4px;
+      text-align: center;
+      color: #9ca3af;
+    }
+
+    .center-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .message {
+      margin-top: 4px;
+      min-height: 18px;
+      font-size: 0.9rem;
+      color: #fbbf24;
+      text-align: center;
+    }
+
+    .winner {
+      color: #4ade80;
+      font-weight: 600;
+    }
+
+    .loser {
+      color: #f97373;
+      font-weight: 600;
+    }
+
+    @media (max-width: 700px) {
+      .card {
+        width: 48px;
+        height: 70px;
+        font-size: 0.9rem;
+      }
+
+      .card.center {
+        width: 64px;
+        height: 90px;
+        font-size: 1.1rem;
+      }
+
+      .hand {
+        flex-wrap: wrap;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="game-container">
+    <div class="title-row">
+      <h1>Speed (Simple Web Version)</h1>
+      <button id="newGameBtn" class="btn">New Game</button>
+    </div>
+
+    <div class="status-bar">
+      <div>
+        <span class="status-label">Tip:</span> Play cards that are <strong>1 higher or lower</strong> than the center (A
+        ↔ K).
+      </div>
+      <div id="turnLabel">Your turn</div>
+    </div>
+
+    <div class="board">
+      <div class="row">
+        <div>
+          <div class="zone-label">Computer</div>
+          <div class="hand" id="aiHand"></div>
+        </div>
+        <div class="center-area">
+          <div class="zone-label">Center Pile</div>
+          <div id="centerCard" class="card center"></div>
+          <div class="controls">
+            <button id="flipBtn" class="btn" style="font-size:0.8rem;">No moves? Flip</button>
+          </div>
+        </div>
+        <div>
+          <div class="zone-label">Computer Stock</div>
+          <div id="aiStock" class="card card-back small"></div>
+          <div id="aiStockInfo" class="pile-info"></div>
+        </div>
+      </div>
+      <div class="row" style="justify-content:center;">
+        <div id="message" class="message"></div>
+      </div>
+      <div class="row">
+        <div>
+          <div class="zone-label">You</div>
+          <div class="hand" id="playerHand"></div>
+        </div>
+        <div></div>
+        <div>
+          <div class="zone-label">Your Stock</div>
+          <div id="playerStock" class="card card-back small"></div>
+          <div id="playerStockInfo" class="pile-info"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUITS = ["♠", "♥", "♦", "♣"];
+    const RANKS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+
+    function rankToDisplay(rank) {
+      if (rank === 1) return "A";
+      if (rank === 11) return "J";
+      if (rank === 12) return "Q";
+      if (rank === 13) return "K";
+      return String(rank);
+    }
+
+    function createDeck() {
+      const deck = [];
+      for (const suit of SUITS) {
+        for (const rank of RANKS) {
+          deck.push({ rank, suit });
+        }
+      }
+      return deck;
+    }
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function canPlay(card, centerCard) {
+      if (!card || !centerCard) return false;
+      const r = card.rank;
+      const c = centerCard.rank;
+      const higher = c === 13 ? 1 : c + 1;
+      const lower = c === 1 ? 13 : c - 1;
+      return r === higher || r === lower;
+    }
+
+    const state = {
+      centerCard: null,
+      playerHand: [],
+      playerStock: [],
+      aiHand: [],
+      aiStock: [],
+      playerTurn: true,
+      gameOver: false
+    };
+
+    function initGame() {
+      const deck = createDeck();
+      shuffle(deck);
+
+      state.playerStock = deck.splice(0, 20);
+      state.aiStock = deck.splice(0, 20);
+      state.playerHand = deck.splice(0, 5);
+      state.aiHand = deck.splice(0, 5);
+      state.centerCard = deck.shift();
+      state.playerTurn = true;
+      state.gameOver = false;
+
+      updateMessage("Game started. Your move!");
+      updateTurnLabel();
+      render();
+      setTimeout(aiTryPlay, 600);
+    }
+
+    const playerHandEl = document.getElementById("playerHand");
+    const aiHandEl = document.getElementById("aiHand");
+    const centerCardEl = document.getElementById("centerCard");
+    const playerStockInfoEl = document.getElementById("playerStockInfo");
+    const aiStockInfoEl = document.getElementById("aiStockInfo");
+    const messageEl = document.getElementById("message");
+    const turnLabelEl = document.getElementById("turnLabel");
+
+    function renderCard(card, options = {}) {
+      const div = document.createElement("div");
+      div.className = "card" +
+        (options.center ? " center" : "") +
+        (options.small ? " small" : "") +
+        (options.clickable ? " clickable" : "");
+      if (!card) {
+        div.classList.add("muted");
+        div.textContent = "—";
+        return div;
+      }
+      const rankSpan = document.createElement("div");
+      rankSpan.className = "card-rank";
+      rankSpan.textContent = rankToDisplay(card.rank);
+      const suitSpan = document.createElement("div");
+      suitSpan.className = "card-suit";
+      suitSpan.textContent = card.suit;
+      div.appendChild(rankSpan);
+      div.appendChild(suitSpan);
+      return div;
+    }
+
+    function render() {
+      centerCardEl.innerHTML = "";
+      centerCardEl.appendChild(renderCard(state.centerCard, { center: true }));
+
+      playerHandEl.innerHTML = "";
+      state.playerHand.forEach((card, index) => {
+        const canClick = !state.gameOver && canPlay(card, state.centerCard);
+        const cardEl = renderCard(card, { clickable: canClick });
+        cardEl.addEventListener("click", () => {
+          if (canClick && state.playerTurn && !state.gameOver) {
+            playerPlay(index);
+          }
+        });
+        playerHandEl.appendChild(cardEl);
+      });
+
+      aiHandEl.innerHTML = "";
+      state.aiHand.forEach(() => {
+        const cardBack = document.createElement("div");
+        cardBack.className = "card card-back";
+        aiHandEl.appendChild(cardBack);
+      });
+
+      playerStockInfoEl.textContent = `${state.playerStock.length} card(s) remaining`;
+      aiStockInfoEl.textContent = `${state.aiStock.length} card(s) remaining`;
+
+      if (state.gameOver) {
+        centerCardEl.classList.add("muted");
+      } else {
+        centerCardEl.classList.remove("muted");
+      }
+    }
+
+    function updateMessage(text, cssClass) {
+      messageEl.textContent = text || "";
+      messageEl.className = "message";
+      if (cssClass) {
+        messageEl.classList.add(cssClass);
+      }
+    }
+
+    function updateTurnLabel() {
+      if (state.gameOver) {
+        turnLabelEl.textContent = "Game over";
+      } else {
+        turnLabelEl.textContent = state.playerTurn ? "Your turn" : "Computer is thinking...";
+      }
+    }
+
+    function refillHand(hand, stock) {
+      while (hand.length < 5 && stock.length > 0) {
+        hand.push(stock.shift());
+      }
+    }
+
+    function checkWin() {
+      if (state.playerHand.length === 0 && state.playerStock.length === 0) {
+        state.gameOver = true;
+        updateMessage("You win! 🎉", "winner");
+        updateTurnLabel();
+        render();
+        return true;
+      }
+      if (state.aiHand.length === 0 && state.aiStock.length === 0) {
+        state.gameOver = true;
+        updateMessage("Computer wins! 💻", "loser");
+        updateTurnLabel();
+        render();
+        return true;
+      }
+      return false;
+    }
+
+    function playerPlay(index) {
+      const card = state.playerHand[index];
+      if (!canPlay(card, state.centerCard) || state.gameOver) return;
+
+      state.centerCard = card;
+      state.playerHand.splice(index, 1);
+      refillHand(state.playerHand, state.playerStock);
+
+      if (checkWin()) return;
+
+      state.playerTurn = false;
+      updateMessage("Nice move. Computer's turn...");
+      updateTurnLabel();
+      render();
+      setTimeout(aiTryPlay, 600);
+    }
+
+    function aiTryPlay() {
+      if (state.gameOver) return;
+
+      const playableIndices = [];
+      state.aiHand.forEach((card, i) => {
+        if (canPlay(card, state.centerCard)) {
+          playableIndices.push(i);
+        }
+      });
+
+      if (playableIndices.length === 0) {
+        state.playerTurn = true;
+        updateMessage("Computer has no move. Your turn!");
+        updateTurnLabel();
+        render();
+        return;
+      }
+
+      const idx = playableIndices[Math.floor(Math.random() * playableIndices.length)];
+      const card = state.aiHand[idx];
+      state.centerCard = card;
+      state.aiHand.splice(idx, 1);
+      refillHand(state.aiHand, state.aiStock);
+
+      if (checkWin()) return;
+
+      state.playerTurn = true;
+      updateMessage("Computer played a card. Your turn!");
+      updateTurnLabel();
+      render();
+    }
+
+    function flipCenterIfStuck() {
+      if (state.gameOver) return;
+
+      const playerCan = state.playerHand.some(c => canPlay(c, state.centerCard));
+      const aiCan = state.aiHand.some(c => canPlay(c, state.centerCard));
+
+      if (playerCan || aiCan) {
+        updateMessage("There are still moves available.");
+        return;
+      }
+
+      if (state.playerStock.length > 0 || state.aiStock.length > 0) {
+        const pile = [];
+        if (state.playerStock.length > 0) pile.push(state.playerStock.shift());
+        if (state.aiStock.length > 0) pile.push(state.aiStock.shift());
+        if (pile.length > 0) {
+          state.centerCard = pile[pile.length - 1];
+          updateMessage("No moves. Flipped new center card.");
+          render();
+          if (!state.playerTurn) {
+            setTimeout(aiTryPlay, 600);
+          }
+        } else {
+          updateMessage("No cards left to flip.");
+        }
+      } else {
+        updateMessage("No cards left to flip.");
+      }
+    }
+
+    document.getElementById("newGameBtn").addEventListener("click", initGame);
+    document.getElementById("flipBtn").addEventListener("click", flipCenterIfStuck);
+
+    initGame();
+  </script>
+</body>
+
+</html>
