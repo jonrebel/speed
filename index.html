@@ -505,23 +505,35 @@
 
       const playerCan = state.playerHand.some(c => canPlay(c, state.centerCard));
       const aiCan = state.aiHand.some(c => canPlay(c, state.centerCard));
-
       if (playerCan || aiCan) {
+        if (!playerCan && aiCan) {
+          state.playerTurn = false;
+          updateMessage("You have no moves. Computer will play...");
+          updateTurnLabel();
+          render();
+          setTimeout(aiTryPlay, 400);
+          return;
+        }
+        if (playerCan && !aiCan) {
+          state.playerTurn = true;
+          updateMessage("Computer has no move. Your turn!");
+          updateTurnLabel();
+          render();
+          return;
+        }
         updateMessage("There are still moves available.");
         return;
       }
-
       if (state.playerStock.length > 0 || state.aiStock.length > 0) {
         const pile = [];
         if (state.playerStock.length > 0) pile.push(state.playerStock.shift());
         if (state.aiStock.length > 0) pile.push(state.aiStock.shift());
+
         if (pile.length > 0) {
           state.centerCard = pile[pile.length - 1];
-          updateMessage("No moves. Flipped new center card.");
+          updateMessage("No moves for either player. Flipped new center card.");
           render();
-          if (!state.playerTurn) {
-            setTimeout(aiTryPlay, 600);
-          }
+          if (!state.playerTurn) setTimeout(aiTryPlay, 600);
         } else {
           updateMessage("No cards left to flip.");
         }
@@ -529,6 +541,7 @@
         updateMessage("No cards left to flip.");
       }
     }
+
 
     document.getElementById("newGameBtn").addEventListener("click", initGame);
     document.getElementById("flipBtn").addEventListener("click", flipCenterIfStuck);
